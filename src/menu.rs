@@ -1,4 +1,3 @@
-use crate::loading::TextureAssets;
 use crate::GameState;
 use bevy::prelude::*;
 
@@ -9,9 +8,9 @@ pub struct MenuPlugin;
 impl Plugin for MenuPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Menu), setup_menu)
-            .add_systems(Update, click_play_button.run_if(in_state(GameState::Menu)))
-            .add_systems(OnExit(GameState::Menu), cleanup_menu);
-    }
+        .add_systems(Update, click_play_button.run_if(in_state(GameState::Menu)))
+        .add_systems(OnExit(GameState::Menu), cleanup_menu);
+}
 }
 
 #[derive(Component)]
@@ -32,9 +31,9 @@ impl Default for ButtonColors {
 #[derive(Component)]
 struct Menu;
 
-fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
-    info!("menu");
-    commands.spawn(Camera2dBundle::default());
+fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
+    debug!("Opening menu");
+    commands.spawn((Camera2dBundle::default(), Menu));
     commands
         .spawn((
             NodeBundle {
@@ -126,7 +125,7 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
                         },
                     ));
                     parent.spawn(ImageBundle {
-                        image: textures.bevy.clone().into(),
+                        image: UiImage::new(asset_server.load("textures/bevy.png")),
                         style: Style {
                             width: Val::Px(32.),
                             ..default()
@@ -152,7 +151,7 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
                         normal: Color::NONE,
                         hovered: Color::rgb(0.25, 0.25, 0.25),
                     },
-                    OpenLink("https://github.com/NiklasEi/bevy_game_template"),
+                    OpenLink("https://github.com/doonv/bevy-jam-3-game"),
                 ))
                 .with_children(|parent| {
                     parent.spawn(TextBundle::from_section(
@@ -164,7 +163,7 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
                         },
                     ));
                     parent.spawn(ImageBundle {
-                        image: textures.github.clone().into(),
+                        image: UiImage::new(asset_server.load("textures/github.png")),
                         style: Style {
                             width: Val::Px(32.),
                             ..default()
@@ -174,7 +173,6 @@ fn setup_menu(mut commands: Commands, textures: Res<TextureAssets>) {
                 });
         });
 }
-
 #[derive(Component)]
 struct ChangeState(GameState);
 
