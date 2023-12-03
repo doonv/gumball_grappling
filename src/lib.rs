@@ -1,19 +1,25 @@
 #![allow(clippy::type_complexity)]
 
-
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 
+mod hud;
+mod materials;
 mod menu;
 mod player;
 mod spawning;
-mod hud;
 
 use bevy::app::App;
+use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
-use bevy_xpbd_3d::plugins::{PhysicsPlugins, PhysicsDebugPlugin};
+use bevy_atmosphere::collection::gradient::Gradient;
+use bevy_atmosphere::model::AtmosphereModel;
+use bevy_atmosphere::plugin::AtmospherePlugin;
+use bevy_toon_shader::ToonShaderPlugin;
+use bevy_xpbd_3d::plugins::{PhysicsDebugPlugin, PhysicsPlugins};
 use bevy_xpbd_3d::resources::Gravity;
 use hud::HudPlugin;
+use materials::CustomMaterialsPlugin;
 use spawning::SpawnPlugin;
 
 // This example game uses States to separate logic
@@ -33,14 +39,29 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_state::<GameState>()
-            .insert_resource(Gravity(Vec3::Y * -5.0))
+            .insert_resource(Msaa::Off)
+            .insert_resource(ClearColor(Color::rgb(0.6, 0.8, 0.9)))
+            .insert_resource(AmbientLight {
+                brightness: 0.9,
+                ..default()
+            })
+            .insert_resource(Gravity(Vec3::Y * -1.0))
+            .insert_resource(AtmosphereModel::new(Gradient {
+                sky: Color::rgb(0.6, 0.8, 0.9),
+                horizon: Color::rgb(0.8, 0.7, 0.9),
+                ground: Color::GRAY,
+            }))
             .add_plugins((
                 MenuPlugin,
                 PlayerPlugin,
                 PhysicsPlugins::default(),
                 SpawnPlugin,
                 PhysicsDebugPlugin::default(),
-                HudPlugin
+                HudPlugin,
+                ToonShaderPlugin,
+                AtmospherePlugin,
+                FrameTimeDiagnosticsPlugin,
+                CustomMaterialsPlugin,
             ));
     }
 }

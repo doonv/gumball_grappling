@@ -13,12 +13,7 @@ use winit::window::Icon;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Off)
-        .insert_resource(ClearColor(Color::rgb(0.6, 0.8, 0.9)))
-        .insert_resource(AmbientLight {
-            brightness: 0.1,
-            ..default()
-        })
+        
         .add_plugins((
             DevLogPlugin {
                 filter: "wgpu=error,naga=warn,bevy_dev_console=trace,bevy_jam_3_game=trace"

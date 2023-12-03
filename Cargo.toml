@@ -1,8 +1,8 @@
 [package]
-name = "bevy_jam_3_game"                         # ToDo
+name = "bevy_jam_3_game"
 version = "0.1.0"
 publish = false
-authors = ["Niklas Eicker <git@nikl.me>"]        # ToDo: you are the author ;)
+authors = ["Doonv"]
 edition = "2021"
 exclude = ["dist", "build", "assets", "credits"]
 
@@ -39,6 +39,8 @@ bevy_dev_console = { path = "../bevy_dev_console" }
 winit = { version = "0.28.7", default-features = false }
 image = { version = "0.24", default-features = false }
 bevy_xpbd_3d = "0.3.2"
+bevy_toon_shader = "0.3.0"
+bevy_atmosphere = "0.8.1"
 
 [build-dependencies]
 embed-resource = "1.4"
