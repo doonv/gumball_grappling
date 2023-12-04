@@ -1,13 +1,21 @@
-use bevy::{pbr::DirectionalLightShadowMap, prelude::*};
+use std::time::Duration;
+
+use bevy::{ecs::system::Command, pbr::DirectionalLightShadowMap, prelude::*};
 use bevy_toon_shader::{ToonShaderMaterial, ToonShaderSun};
+use bevy_tweening::{lens::ColorMaterialColorLens, *};
 use bevy_xpbd_3d::prelude::*;
 use rand::Rng;
 
-use crate::{materials::OutlineToonMaterial, player::Player, GameState};
+use crate::{
+    materials::{OutlineToonLens, OutlineToonMaterial},
+    player::Player,
+    GameState,
+};
 
 pub const DESPAWN_Y: f32 = -100.0;
 pub const MIN_SPHERE_DISTANCE: f32 = 1000.0;
-pub const MIN_THINGAMAJIG_DISTANCE: f32 = 5000.0;
+pub const MIN_THINGAMAJIG_DISTANCE: f32 = 20000.0;
+pub const THINGAMAJIG_FADEOUT_TWEEN_ID: u64 = 0;
 
 #[derive(Resource)]
 pub struct SpawnSettings {
@@ -33,6 +41,7 @@ impl Plugin for SpawnPlugin {
                     spawn_falling_objects,
                     despawn_falling_objects,
                     modify_spawn_settings,
+                    handle_tween_completions,
                 )
                     .run_if(in_state(GameState::Playing)),
             );
@@ -75,7 +84,7 @@ pub fn setup(
 pub struct StaticSphere;
 
 #[derive(Component)]
-pub struct Thingajamig;
+pub struct Thingajamig(Vec<Entity>);
 
 pub fn spawn_falling_objects(
     mut commands: Commands,
@@ -204,29 +213,39 @@ pub fn spawn_falling_objects(
             });
             if !other_thingamajig_nearby {
                 info!("spawning!");
-                commands.spawn((Thingajamig, Transform::from_translation(pos)));
-                for x in 0..10 {
-                    for y in 0..10 {
-                        for z in 0..5 {
-                            commands.spawn((
-                                MaterialMeshBundle {
-                                    mesh: cube_mesh.clone(),
-                                    material: material.clone(),
-                                    transform: Transform::from_xyz(
-                                        pos.x + (x as f32 * 2.0),
-                                        pos.y + (y as f32 * 2.0),
-                                        pos.z + (z as f32 * 2.0),
-                                    ),
-                                    ..default()
-                                },
-                                RigidBody::Dynamic,
-                                GravityScale(0.0),
-                                Collider::cuboid(1.0, 1.0, 1.0),
-                                DespawnOnLowerThanY,
-                            ));
+                let mut entities = Vec::with_capacity(10 * 10 * 6);
+                for x in -5..5 {
+                    for y in -5..5 {
+                        for z in -3..3 {
+                            entities.push(
+                                commands
+                                    .spawn((
+                                        MaterialMeshBundle {
+                                            mesh: cube_mesh.clone(),
+                                            material: material.clone(),
+                                            transform: Transform::from_xyz(
+                                                pos.x + (x as f32 * 2.0),
+                                                pos.y + (y as f32 * 2.0),
+                                                pos.z + (z as f32 * 2.0),
+                                            ),
+                                            ..default()
+                                        },
+                                        RigidBody::Static,
+                                        GravityScale(0.0),
+                                        Collider::cuboid(1.0, 1.0, 1.0),
+                                        ColliderDensity(0.25),
+                                        DespawnOnLowerThanY,
+                                    ))
+                                    .id(),
+                            );
                         }
                     }
                 }
+                commands.spawn((
+                    Thingajamig(entities),
+                    Collider::cuboid(20.0, 20.0, 12.0),
+                    TransformBundle::from_transform(Transform::from_translation(pos)),
+                ));
             }
         }
         *last_time_elapsed_lvl2 += spawn_settings.lvl2_spawn;
@@ -258,6 +277,7 @@ fn modify_spawn_settings(
         settings.lvl1_spawn = 0.08;
         settings.lvl2_spawn = 0.40;
     } else if player_y > 200.0 {
+        settings.lvl2_spawn = 0.0;
         settings.lvl1_spawn = 0.07;
     } else if player_y > 100.0 {
         settings.lvl1_spawn = 0.04;
@@ -265,3 +285,15 @@ fn modify_spawn_settings(
         settings.lvl1_spawn = 0.02;
     }
 }
+
+fn handle_tween_completions(mut commands: Commands, mut reader: EventReader<TweenCompleted>) {
+    for TweenCompleted { entity, user_data } in reader.read() {
+        match *user_data {
+            THINGAMAJIG_FADEOUT_TWEEN_ID => {
+                commands.entity(*entity).despawn_recursive();
+            }
+            event_id => warn!("Unhandled tween completion {event_id:?}"),
+        }
+    }
+}
+

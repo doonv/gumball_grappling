@@ -4,6 +4,7 @@ version = "0.1.0"
 publish = false
 authors = ["Doonv"]
 edition = "2021"
+license = "ARR"
 exclude = ["dist", "build", "assets", "credits"]
 
 [workspace]
@@ -41,6 +42,7 @@ image = { version = "0.24", default-features = false }
 bevy_xpbd_3d = "0.3.2"
 bevy_toon_shader = "0.3.0"
 bevy_atmosphere = "0.8.1"
+bevy_tweening = "0.9.0"
 
 [build-dependencies]
 embed-resource = "1.4"

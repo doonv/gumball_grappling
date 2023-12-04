@@ -1,5 +1,7 @@
 #![allow(clippy::type_complexity)]
 
+use std::default;
+
 use crate::menu::MenuPlugin;
 use crate::player::PlayerPlugin;
 
@@ -16,6 +18,7 @@ use bevy_atmosphere::collection::gradient::Gradient;
 use bevy_atmosphere::model::AtmosphereModel;
 use bevy_atmosphere::plugin::AtmospherePlugin;
 use bevy_toon_shader::ToonShaderPlugin;
+use bevy_tweening::TweeningPlugin;
 use bevy_xpbd_3d::plugins::{PhysicsDebugPlugin, PhysicsPlugins};
 use bevy_xpbd_3d::resources::Gravity;
 use hud::HudPlugin;
@@ -62,6 +65,8 @@ impl Plugin for GamePlugin {
                 AtmospherePlugin,
                 FrameTimeDiagnosticsPlugin,
                 CustomMaterialsPlugin,
+                TweeningPlugin,
+                // ShopPlugin, cut from the game because bevy ui sucks ass
             ));
     }
 }

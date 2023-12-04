@@ -3,11 +3,13 @@ use bevy::{
     render::render_resource::{AsBindGroup, AsBindGroupShaderType, ShaderRef, ShaderType},
 };
 use bevy_toon_shader::{ToonShaderMainCamera, ToonShaderSun};
+use bevy_tweening::{Lens, Lerp};
 
 pub struct CustomMaterialsPlugin;
 impl Plugin for CustomMaterialsPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(MaterialPlugin::<OutlineToonMaterial>::default())
+            .add_plugins(UiMaterialPlugin::<RoundedRectangleMaterial>::default())
             .add_systems(Update, update_outline_toon_shader);
     }
 }
@@ -76,4 +78,31 @@ pub struct ToonShaderOutlineMaterialUniform {
     pub camera_pos: Vec3,
     pub ambient_color: Vec4,
     pub outline_color: Vec4,
+}
+
+pub struct OutlineToonLens {
+    pub start: Color,
+    pub end: Color,
+}
+impl Lens<OutlineToonMaterial> for OutlineToonLens {
+    fn lerp(&mut self, target: &mut OutlineToonMaterial, ratio: f32) {
+        let start = self.start.as_lcha_f32();
+        let end = self.end.as_lcha_f32();
+        let value = start.lerp(&end, &ratio);
+        target.color = value.into();
+    }
+}
+
+#[derive(AsBindGroup, Asset, TypePath, Debug, Clone)]
+pub struct RoundedRectangleMaterial {
+    #[uniform(0)]
+    pub color: Vec4,
+    #[uniform(1)]
+    pub roundedness: Vec2,
+}
+
+impl UiMaterial for RoundedRectangleMaterial {
+    fn fragment_shader() -> ShaderRef {
+        "shaders/rounded_rectangle.wgsl".into()
+    }
 }
