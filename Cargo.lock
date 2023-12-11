@@ -557,12 +557,16 @@ name = "bevy_dev_console"
 version = "0.1.0"
 dependencies = [
  "ahash",
+ "android_log-sys",
  "bevy",
  "bevy_egui",
  "chrono",
+ "console_error_panic_hook",
+ "instant",
  "logos",
  "tracing-log 0.2.0",
  "tracing-subscriber",
+ "tracing-wasm",
 ]
 
 [[package]]
@@ -777,23 +781,6 @@ dependencies = [
  "bevy_utils",
  "bevy_window",
  "bevy_winit",
-]
-
-[[package]]
-name = "bevy_jam_3_game"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_atmosphere",
- "bevy_dev_console",
- "bevy_toon_shader",
- "bevy_tweening",
- "bevy_xpbd_3d",
- "embed-resource",
- "image",
- "rand",
- "webbrowser",
- "winit",
 ]
 
 [[package]]
@@ -1084,16 +1071,6 @@ dependencies = [
  "bevy_math",
  "bevy_reflect",
  "thiserror",
-]
-
-[[package]]
-name = "bevy_tweening"
-version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216b3cb82fd0d149c5a9abfb5e382d8a671ff469f8759116e091c710bfa37139"
-dependencies = [
- "bevy",
- "interpolation",
 ]
 
 [[package]]
@@ -2217,6 +2194,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "gumball_grappling"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_atmosphere",
+ "bevy_dev_console",
+ "bevy_toon_shader",
+ "bevy_xpbd_3d",
+ "embed-resource",
+ "image",
+ "instant",
+ "rand",
+ "webbrowser",
+ "winit",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2378,12 +2372,6 @@ dependencies = [
  "wasm-bindgen",
  "web-sys",
 ]
-
-[[package]]
-name = "interpolation"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3b7357d2bbc5ee92f8e899ab645233e43d21407573cceb37fed8bc3dede2c02"
 
 [[package]]
 name = "io-kit-sys"
@@ -2737,8 +2725,8 @@ name = "mobile"
 version = "0.1.0"
 dependencies = [
  "bevy",
- "bevy_jam_3_game",
  "cpal",
+ "gumball_grappling",
 ]
 
 [[package]]

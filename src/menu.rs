@@ -1,6 +1,6 @@
 use crate::GameState;
 use bevy::prelude::*;
-
+use bevy_xpbd_3d::prelude::{Physics, PhysicsTime};
 pub struct MenuPlugin;
 
 /// This plugin is responsible for the game menu (containing only one button...)
@@ -51,12 +51,23 @@ fn setup_menu(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .with_children(|children| {
             let button_colors = ButtonColors::default();
+            children.spawn((ImageBundle {
+                image: UiImage::new(asset_server.load("lgoo_glow.png")),
+                style: Style {
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },));
             children
                 .spawn((
                     ButtonBundle {
                         style: Style {
                             width: Val::Px(140.0),
                             height: Val::Px(50.0),
+                            position_type: PositionType::Absolute,
+                            bottom: Val::Px(50.0),
                             justify_content: JustifyContent::Center,
                             align_items: AlignItems::Center,
                             ..Default::default()
@@ -213,7 +224,12 @@ fn click_play_button(
     }
 }
 
-fn cleanup_menu(mut commands: Commands, menu: Query<Entity, With<Menu>>) {
+fn cleanup_menu(
+    mut commands: Commands,
+    menu: Query<Entity, With<Menu>>,
+    mut physics_time: ResMut<Time<Physics>>,
+) {
+    physics_time.unpause();
     for entity in menu.iter() {
         commands.entity(entity).despawn_recursive();
     }

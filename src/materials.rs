@@ -3,7 +3,6 @@ use bevy::{
     render::render_resource::{AsBindGroup, AsBindGroupShaderType, ShaderRef, ShaderType},
 };
 use bevy_toon_shader::{ToonShaderMainCamera, ToonShaderSun};
-use bevy_tweening::{Lens, Lerp};
 
 pub struct CustomMaterialsPlugin;
 impl Plugin for CustomMaterialsPlugin {
@@ -52,6 +51,9 @@ impl Material for OutlineToonMaterial {
     fn fragment_shader() -> ShaderRef {
         "shaders/outline_toon.wgsl".into()
     }
+    fn alpha_mode(&self) -> AlphaMode {
+        AlphaMode::Blend
+    }
 }
 
 impl AsBindGroupShaderType<ToonShaderOutlineMaterialUniform> for OutlineToonMaterial {
@@ -78,19 +80,6 @@ pub struct ToonShaderOutlineMaterialUniform {
     pub camera_pos: Vec3,
     pub ambient_color: Vec4,
     pub outline_color: Vec4,
-}
-
-pub struct OutlineToonLens {
-    pub start: Color,
-    pub end: Color,
-}
-impl Lens<OutlineToonMaterial> for OutlineToonLens {
-    fn lerp(&mut self, target: &mut OutlineToonMaterial, ratio: f32) {
-        let start = self.start.as_lcha_f32();
-        let end = self.end.as_lcha_f32();
-        let value = start.lerp(&end, &ratio);
-        target.color = value.into();
-    }
 }
 
 #[derive(AsBindGroup, Asset, TypePath, Debug, Clone)]

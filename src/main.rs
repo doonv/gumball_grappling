@@ -7,23 +7,22 @@ use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
 use bevy_dev_console::prelude::*;
-use bevy_jam_3_game::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
+use gumball_grappling::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use std::io::Cursor;
 use winit::window::Icon;
 
 fn main() {
     App::new()
-        
         .add_plugins((
-            DevLogPlugin {
-                filter: "wgpu=error,naga=warn,bevy_dev_console=trace,bevy_jam_3_game=trace"
+            ConsoleLogPlugin {
+                filter: "wgpu=error,naga=warn,bevy_dev_console=trace,gumball_grappling=trace"
                     .to_string(),
                 ..default()
             },
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "Bevy game".to_string(), // ToDo
+                        title: "Gumball Grappling".to_string(), // ToDo
                         // Bind to canvas included in `index.html`
                         canvas: Some("#bevy".to_owned()),
                         // The canvas size is constrained in index.html and build/web/styles.css

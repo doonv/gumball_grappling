@@ -1,14 +1,42 @@
-use std::time::Duration;
+use instant::Duration;
 
 use bevy::{
     diagnostic::{DiagnosticsStore, FrameTimeDiagnosticsPlugin},
     prelude::*,
 };
 
-use crate::{player::Player, GameState};
+use crate::{player::Player, shop::PointsSpent, GameState};
 
 #[derive(Resource, Default)]
-pub struct Score(pub u64);
+pub struct Score {
+    timer: f32,
+    pub current: ScoreData,
+    pub to_be_added: ScoreData,
+}
+#[derive(Default)]
+pub struct ScoreData {
+    pub height: u64,
+    pub destruction: u64,
+}
+impl ScoreData {
+    pub fn total(&self) -> u64 {
+        self.height + self.destruction
+    }
+}
+fn transfer_score(mut score: ResMut<Score>, time: Res<Time>) {
+    score.timer -= time.delta_seconds();
+    if score.timer < 0.0 {
+        if score.to_be_added.destruction > 0 {
+            score.to_be_added.destruction -= 1;
+            score.current.destruction += 1;
+        }
+        if score.to_be_added.height > 0 {
+            score.to_be_added.height -= 1;
+            score.current.height += 1;
+        }
+        score.timer = 0.2;
+    }
+}
 
 #[derive(Resource, Default)]
 pub struct UiHints(Vec<UiHint>);
@@ -33,6 +61,8 @@ pub struct HintImage;
 pub struct HintContainer;
 #[derive(Component)]
 pub struct PauseMenu;
+#[derive(Component)]
+pub struct PointsSpentText;
 
 pub struct HudPlugin;
 impl Plugin for HudPlugin {
@@ -47,6 +77,7 @@ impl Plugin for HudPlugin {
                     update_info_text,
                     update_hints,
                     create_hints,
+                    transfer_score,
                 )
                     .run_if(in_state(GameState::Playing)),
             );
@@ -76,6 +107,28 @@ fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..default()
         },
         ScoreText,
+    ));
+    commands.spawn((
+        TextBundle {
+            text: Text::from_section(
+                "0",
+                TextStyle {
+                    font: asset_server.load("fonts/poppins/Poppins-Thin.ttf"),
+                    font_size: 40.0,
+                    color: Color::WHITE,
+                },
+            ),
+            style: Style {
+                position_type: PositionType::Absolute,
+                margin: UiRect {
+                    top: Val::Px(60.0),
+                    ..UiRect::all(Val::Auto)
+                },
+                ..default()
+            },
+            ..default()
+        },
+        PointsSpentText,
     ));
     // Crosshair
     commands.spawn(ImageBundle {
@@ -260,9 +313,22 @@ fn setup_hud(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-fn update_score_text(score: Res<Score>, mut texts: Query<&mut Text, With<ScoreText>>) {
+fn update_score_text(
+    score: Res<Score>,
+    points_spent: Res<PointsSpent>,
+    mut texts: Query<&mut Text, (With<ScoreText>, Without<PointsSpentText>)>,
+    mut texts2: Query<(&mut Text, &mut Visibility), (Without<ScoreText>, With<PointsSpentText>)>,
+) {
     for mut text in texts.iter_mut() {
-        text.sections[0].value = score.0.to_string();
+        text.sections[0].value = score.current.total().to_string();
+    }
+    for mut text in texts2.iter_mut() {
+        if points_spent.0 > 0 {
+            text.0.sections[0].value = (score.current.total() - points_spent.0).to_string();
+            *text.1 = Visibility::Visible;
+        } else {
+            *text.1 = Visibility::Hidden;
+        }
     }
 }
 fn update_info_text(
@@ -327,11 +393,11 @@ fn update_hints(
 fn create_hints(
     mut hints: ResMut<UiHints>,
     player: Query<&Transform, With<Player>>,
-    mut hints_activated: Local<[bool; 2]>,
+    mut hints_activated: Local<[bool; 3]>,
 ) {
     if let Ok(player) = player.get_single() {
         // trace!("{:.1}", player.translation.y);
-        if player.translation.y > 0.5 && !hints_activated[0] {
+        if player.translation.y > 0.6 && !hints_activated[0] {
             hints.0.push(UiHint {
                 text: Some("to use your grappling hook on an object.".to_string()),
                 icon: "textures/keyboardmouse/Mouse_Left_Key_Dark.png",
@@ -339,13 +405,21 @@ fn create_hints(
             });
             hints_activated[0] = true;
         }
-        if player.translation.y > 50.0 && !hints_activated[1] {
+        if player.translation.y > 100.0 && !hints_activated[1] {
             hints.0.push(UiHint {
                 text: Some("to dash. (Replinishes upon hooking to an object)".to_string()),
                 icon: "textures/keyboardmouse/Mouse_Right_Key_Dark.png",
                 duration: Duration::from_secs(5),
             });
             hints_activated[1] = true;
+        }
+        if player.translation.y > 300.0 && !hints_activated[2] {
+            hints.0.push(UiHint {
+                text: Some("to toggle additional info.".to_string()),
+                icon: "textures/keyboardmouse/F3_Key_Dark.png",
+                duration: Duration::from_secs(5),
+            });
+            hints_activated[2] = true;
         }
     }
 }

@@ -1,5 +1,5 @@
 [package]
-name = "bevy_jam_3_game"
+name = "gumball_grappling"
 version = "0.1.0"
 publish = false
 authors = ["Doonv"]
@@ -34,7 +34,7 @@ dev = ["bevy/dynamic_linking"]
 bevy = { version = "0.12", default-features = true }
 rand = "0.8.3"
 webbrowser = { version = "0.8", features = ["hardened"] }
-bevy_dev_console = { path = "../bevy_dev_console" }
+bevy_dev_console = { path = "../bevy_dev_console" }       # not availible yet (sorry)
 
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.28.7", default-features = false }
@@ -42,7 +42,7 @@ image = { version = "0.24", default-features = false }
 bevy_xpbd_3d = "0.3.2"
 bevy_toon_shader = "0.3.0"
 bevy_atmosphere = "0.8.1"
-bevy_tweening = "0.9.0"
+instant = "0.1.12"
 
 [build-dependencies]
 embed-resource = "1.4"

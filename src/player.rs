@@ -1,4 +1,11 @@
-use crate::{hud::Score, materials::OutlineToonMaterial, GameState};
+use instant::Duration;
+
+use crate::{
+    hud::Score,
+    materials::OutlineToonMaterial,
+    spawning::{OutlineToonFadeOut, Thingajamig},
+    GameState,
+};
 use bevy::{
     core_pipeline::{bloom::BloomSettings, tonemapping::Tonemapping},
     input::mouse::MouseMotion,
@@ -12,16 +19,22 @@ use bevy_xpbd_3d::{math::Quaternion, prelude::*};
 pub const ACCELERATION: f32 = 30.0;
 pub const JUMP_VELOCITY: f32 = 10.0;
 pub const HOOK_SPEED: f32 = 0.75;
-// pub const DASH_POWER: f32 = 50.0; // default
-pub const DASH_POWER: f32 = 200.0;
+pub const DASH_POWER: f32 = 100.0; // default
+                                   // pub const DASH_POWER: f32 = 200.0;
 pub const DASH_COOLDOWN: f64 = 1.0;
 
 pub struct PlayerPlugin;
 
 #[derive(Component)]
 pub struct Player {
-    hooked_onto: Option<Entity>,
-    dash: Option<()>,
+    pub hooked_onto: Option<Entity>,
+    pub dash: Option<()>,
+    pub upgrades: PlayerUpgrades,
+}
+pub struct PlayerUpgrades {
+    pub hook_range: u64,
+    pub hook_strength: u64,
+    pub dash_strength: u64,
 }
 
 #[derive(Component)]
@@ -41,6 +54,7 @@ impl Plugin for PlayerPlugin {
                     player_use_and_remove_hook,
                     player_dash,
                     player_update_score,
+                    player_colliding_entities,
                 )
                     .run_if(in_state(GameState::Playing)),
             );
@@ -61,7 +75,7 @@ fn spawn_player(
                     ..default()
                 })),
                 material: materials.add(Color::rgb_u8(124, 144, 255).into()),
-                transform: Transform::from_xyz(0.0, 400.5, 0.0),
+                transform: Transform::from_xyz(0.0, 0.5, 0.0),
                 ..default()
             },
             CameraLook(Transform::default()),
@@ -74,6 +88,11 @@ fn spawn_player(
             Player {
                 hooked_onto: None,
                 dash: Some(()),
+                upgrades: PlayerUpgrades {
+                    hook_range: 0,
+                    hook_strength: 0,
+                    dash_strength: 0,
+                },
             },
             ShapeCaster::new(
                 Collider::cylinder(0.25, 0.5),
@@ -200,7 +219,7 @@ fn player_create_hook(
     if let Some(hit) = caster.cast_ray(
         player_transform.translation,
         camera_look.0.forward(),
-        40.0,
+        40.0 + (player.upgrades.hook_range as f32 * 20.0),
         true,
         SpatialQueryFilter::new().without_entities([player_entity]),
     ) {
@@ -230,7 +249,11 @@ fn player_use_and_remove_hook(
     mouse: Res<Input<MouseButton>>,
     mut gizmos: Gizmos,
     mut toon_materials: ResMut<Assets<OutlineToonMaterial>>,
+    time_physics: Res<Time<Physics>>,
 ) {
+    if time_physics.is_paused() {
+        return;
+    }
     if let Ok((mut player, mut velocity, transform, look)) = player.get_single_mut() {
         if let Some(hooked_onto) = player.hooked_onto {
             if let Ok((entity_transform, material_handle, mut other_velocity)) =
@@ -243,16 +266,27 @@ fn player_use_and_remove_hook(
                 );
                 let direction = (entity_transform.translation - transform.translation).normalize();
 
-                velocity.0 += direction * HOOK_SPEED;
-                other_velocity.0 -= direction * HOOK_SPEED * 0.2;
+                if entity_transform
+                    .translation
+                    .distance_squared(transform.translation)
+                    > 5.0
+                {
+                    velocity.0 += direction
+                        * HOOK_SPEED
+                        * ((player.upgrades.hook_strength as f32 + 4.0) * 0.25);
+                    other_velocity.0 -= direction
+                        * HOOK_SPEED
+                        * 0.2
+                        * ((player.upgrades.hook_strength as f32 + 4.0) * 0.25);
+                }
 
-                if mouse.just_released(MouseButton::Left) {
+                if !mouse.pressed(MouseButton::Left) {
                     if let Some(material) = toon_materials.get_mut(material_handle) {
                         material.outline_color = Color::NONE;
                     }
                 }
             }
-            if mouse.just_released(MouseButton::Left) {
+            if !mouse.pressed(MouseButton::Left) {
                 player.hooked_onto = None;
             }
         }
@@ -270,7 +304,8 @@ fn player_dash(
         let is_on_cooldown = (time.elapsed_seconds_f64() - *last_dash_time) < DASH_COOLDOWN;
         if mouse.just_pressed(MouseButton::Right) && player.dash.take().is_some() && !is_on_cooldown
         {
-            velocity.0 += look.0.forward() * DASH_POWER;
+            velocity.0 +=
+                look.0.forward() * (DASH_POWER + (player.upgrades.dash_strength as f32 * 30.0));
             *last_dash_time = time.elapsed_seconds_f64();
         }
     }
@@ -279,6 +314,33 @@ fn player_dash(
 fn player_update_score(player: Query<&Transform, With<Player>>, mut score: ResMut<Score>) {
     if let Ok(transform) = player.get_single() {
         // If `transform.translation.y` is out of range, this gives `u64::MAX` or `u64::MIN`
-        score.0 = (transform.translation.y as u64 / 10).max(score.0)
+        score.current.height = (transform.translation.y as u64 / 10).max(score.current.height);
+    }
+}
+
+fn player_colliding_entities(
+    mut commands: Commands,
+    player: Query<&CollidingEntities, With<Player>>,
+    thingamajigs: Query<&Thingajamig>,
+    mut score: ResMut<Score>,
+) {
+    if let Ok(CollidingEntities(entities)) = player.get_single() {
+        for entity in entities {
+            if let Ok(Thingajamig(thingamajig_entities)) = thingamajigs.get(*entity) {
+                commands.entity(*entity).despawn();
+                score.to_be_added.destruction += 10;
+                for thingajamig_entity in thingamajig_entities {
+                    commands
+                        .entity(*thingajamig_entity)
+                        .insert(RigidBody::Dynamic)
+                        .insert(SleepingDisabled)
+                        .insert(OutlineToonFadeOut::new(Duration::from_secs(5)))
+                        .remove::<Sleeping>();
+                }
+                // for entity in thingamajig_entities {
+                //     // commands.insert
+                // }
+            }
+        }
     }
 }

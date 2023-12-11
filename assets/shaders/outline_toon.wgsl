@@ -34,7 +34,7 @@ fn fragment (in: VertexOutput) -> @location(0) vec4<f32> {
         light_intensity = 0.0;
     }
 
-    let light = light_intensity * material.sun_color;
+    let light = light_intensity * material.sun_color.rgb;
 
     let view_dir: vec3<f32> = normalize(material.camera_pos - in.world_position.xyz);
 
@@ -44,14 +44,14 @@ fn fragment (in: VertexOutput) -> @location(0) vec4<f32> {
     let specular_intensity = pow(n_dot_h, glossiness * glossiness);
 
     let specular_intensity_smooth = smoothstep(0.005, 0.01, specular_intensity);
-    let specular = specular_intensity_smooth * vec4<f32>(0.9, 0.9 ,0.9 ,1.0);
+    let specular = specular_intensity_smooth * vec4<f32>(0.9, 0.9 ,0.9 , 0.0);
 
     let rim_dot = 1.0 - dot(view_dir, normal);
 
     if rim_dot > 0.5 && material.outline_color.a > 0.0 {
-        return material.outline_color;
+        return material.outline_color * base_color.a;
     } else {
-        return base_color * (light + material.ambient_color + specular);
+        return base_color * vec4<f32>(light.rgb + material.ambient_color.rgb + specular.rgb, 1.0);
     }
 
 }
