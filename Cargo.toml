@@ -34,7 +34,6 @@ dev = ["bevy/dynamic_linking"]
 bevy = { version = "0.12", default-features = true }
 rand = "0.8.3"
 webbrowser = { version = "0.8", features = ["hardened"] }
-bevy_dev_console = { path = "../bevy_dev_console" }       # not availible yet (sorry)
 
 # keep the following in sync with Bevy's dependencies
 winit = { version = "0.28.7", default-features = false }

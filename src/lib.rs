@@ -11,7 +11,6 @@ mod menu;
 mod player;
 mod shop;
 mod spawning;
-mod console_extensions;
 
 use bevy::app::App;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;

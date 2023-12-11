@@ -6,7 +6,6 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::winit::WinitWindows;
 use bevy::DefaultPlugins;
-use bevy_dev_console::prelude::*;
 use gumball_grappling::GamePlugin; // ToDo: Replace bevy_game with your new crate name.
 use std::io::Cursor;
 use winit::window::Icon;
@@ -14,11 +13,6 @@ use winit::window::Icon;
 fn main() {
     App::new()
         .add_plugins((
-            ConsoleLogPlugin {
-                filter: "wgpu=error,naga=warn,bevy_dev_console=trace,gumball_grappling=trace"
-                    .to_string(),
-                ..default()
-            },
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
@@ -33,8 +27,11 @@ fn main() {
                     }),
                     ..default()
                 })
-                .disable::<LogPlugin>(),
-            DevConsolePlugin,
+                .set(LogPlugin {
+                    filter: "wgpu=error,naga=warn,bevy_dev_console=trace,gumball_grappling=trace"
+                        .to_string(),
+                    ..default()
+                }),
             GamePlugin,
         ))
         .add_systems(Startup, set_window_icon)

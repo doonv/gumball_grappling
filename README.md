@@ -15,4 +15,3 @@ Open the shop after earning a few points to make yourself stronger.
 | Right-Click | Dash                             |
 | Tab         | Open Shop                        |
 | F3          | Debug Info                       |
-| `           | Developer Console (Experimental) |
