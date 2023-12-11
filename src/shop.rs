@@ -202,7 +202,6 @@ fn do_upgrades(
         return;
     }
     let player_upgrades = &mut player.single_mut().upgrades;
-
     let points_to_be_spent = points.current.total() - points_spent.0;
     let get_price = |x| (x * x * 3) + 10;
 
@@ -221,18 +220,18 @@ fn do_upgrades(
 
     if key.just_pressed(KeyCode::Key1) {
         if points_to_be_spent > get_price(player_upgrades.hook_range) {
-            player_upgrades.hook_range += 1;
             points_spent.0 += get_price(player_upgrades.hook_range);
+            player_upgrades.hook_range += 1;
         }
     } else if key.just_pressed(KeyCode::Key2) {
         if points_to_be_spent > get_price(player_upgrades.hook_strength) {
-            player_upgrades.hook_strength += 1;
             points_spent.0 += get_price(player_upgrades.hook_strength);
+            player_upgrades.hook_strength += 1;
         }
     } else if key.just_pressed(KeyCode::Key3) {
         if points_to_be_spent > get_price(player_upgrades.dash_strength) {
-            player_upgrades.dash_strength += 1;
             points_spent.0 += get_price(player_upgrades.dash_strength);
+            player_upgrades.dash_strength += 1;
         }
     }
 }
