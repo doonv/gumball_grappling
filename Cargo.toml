@@ -7,9 +7,6 @@ edition = "2021"
 license = "ARR"
 exclude = ["dist", "build", "assets", "credits"]
 
-[workspace]
-members = ["mobile"]
-
 [profile.dev.package."*"]
 opt-level = 3
 
